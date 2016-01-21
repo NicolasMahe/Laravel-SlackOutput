@@ -14,5 +14,6 @@
     "psr-4": {
       "NicolasMahe\\SlackOutput\\": "src/"
     }
-  }
+  },
+  "minimum-stability": "stable"
 }
