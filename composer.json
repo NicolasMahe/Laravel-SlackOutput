@@ -1,0 +1,18 @@
+{
+  "name": "NicolasMahe/SlackOutput",
+  "description": "Send to Slack when something goes wrong with your Laravel application.",
+  "keywords": ["laravel", "slack", "exception", "jobs", "command"],
+  "license": "MIT",
+  "require": {
+    "php": ">=5.4.0",
+    "maknz/slack": "~1.7",
+    "illuminate/support": "5.1.*|5.2.*",
+    "illuminate/console": "5.1.*|5.2.*",
+    "illuminate/queue": "5.1.*|5.2.*",
+  },
+  "autoload": {
+    "psr-4": {
+      "NicolasMahe\\SlackOutput\\": "src/"
+    }
+  },
+}
