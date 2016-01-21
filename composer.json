@@ -8,7 +8,7 @@
     "maknz/slack": "~1.7",
     "illuminate/support": "5.1.*|5.2.*",
     "illuminate/console": "5.1.*|5.2.*",
-    "illuminate/queue": "5.1.*|5.2.*",
+    "illuminate/queue": "5.1.*|5.2.*"
   },
   "autoload": {
     "psr-4": {
