@@ -1,5 +1,5 @@
 {
-  "name": "NicolasMahe/SlackOutput",
+  "name": "nicolasmahe/slack-output",
   "description": "Send to Slack when something goes wrong with your Laravel application.",
   "keywords": ["laravel", "slack", "exception", "jobs", "command"],
   "license": "MIT",
