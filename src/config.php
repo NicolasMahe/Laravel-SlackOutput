@@ -23,16 +23,26 @@ return [
   |
   | The channels we should post to. The channel can either be a
   | channel like #general, a private #group, or a @username. Set to
-  | null to use the default set on the Slack webhook
+  | null to use the default set on the Slack webhook.
+  |
+  | The production and local are corresponding to the app environment.
+  | You can add any app environment to this array.
+  | The default (if not exist) will be the local.
   |
   */
 
   'channel' => [
-    "job_failed"        => "",
-    "scheduled_command" => "",
-    "exception"         => "",
+    "production" => [
+      "job_failed"        => "",
+      "scheduled_command" => "",
+      "exception"         => "",
+    ],
+    "local" => [
+      "job_failed"        => "",
+      "scheduled_command" => "",
+      "exception"         => "",
+    ],
   ],
-
 
   /*
   |-------------------------------------------------------------

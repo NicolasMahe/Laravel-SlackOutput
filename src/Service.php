@@ -39,10 +39,16 @@ class Service
    */
   function __construct(array $config)
   {
+    $env = app()->environment();
+    $channel = $config["channel"]['local'];
+    if (isset($config["channel"][$env])) {
+      $channel = $config["channel"][$env];
+    }
+
     //config
-    $this->channel_job_failed         = $config["channel"]["job_failed"];
-    $this->channel_scheduled_command  = $config["channel"]["scheduled_command"];
-    $this->channel_exception          = $config["channel"]["exception"];
+    $this->channel_job_failed         = $channel["job_failed"];
+    $this->channel_scheduled_command  = $channel["scheduled_command"];
+    $this->channel_exception          = $channel["exception"];
   }
 
   /**
