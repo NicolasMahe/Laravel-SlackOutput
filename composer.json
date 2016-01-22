@@ -1,10 +1,10 @@
 {
-  "name": "nicolasmahe/slack-output",
-  "description": "Send to Slack when something goes wrong with your Laravel application.",
+  "name": "nicolasmahe/laravel-slack-output",
+  "description": "Sends a message to Slack when something goes wrong with your Laravel application.",
   "keywords": ["laravel", "slack", "exception", "jobs", "command"],
   "license": "MIT",
   "require": {
-    "php": ">=5.4.0",
+    "php": ">=5.5.9",
     "maknz/slack": "~1.7",
     "illuminate/support": "5.1.*|5.2.*",
     "illuminate/console": "5.1.*|5.2.*",
