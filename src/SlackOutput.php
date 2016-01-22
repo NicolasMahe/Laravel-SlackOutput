@@ -9,19 +9,63 @@ use Exception;
 
 class SlackOutput
 {
+
   /**
-   * Send to slack the results of the scheduled command.
+   * The default channel to send job failed to
    *
+   * @var string
+   */
+
+  protected $channel_job_failed;
+
+
+  /**
+   * The default channel to send scheduled command to
+   *
+   * @var string
+   */
+
+  protected $channel_scheduled_command;
+
+
+  /**
+   * The channel to send exception to
+   *
+   * @var string
+   */
+
+  protected $channel_exception;
+
+
+  /**
+   * SlackOutput constructor.
+   *
+   * @param array $config
+   * @throws Exception
+   */
+  function __construct(array $config)
+  {
+    //config
+    $this->channel_job_failed         = $config["channel"]["job_failed"];
+    $this->channel_scheduled_command  = $config["channel"]["scheduled_command"];
+    $this->channel_exception          = $config["channel"]["exception"];
+  }
+
+
+  /**
+   * Send to slack the results of a scheduled command.
+   *
+   * @todo: add success tag to adjust the color
    * @param  Event $event
    * @return $this|void
    */
-  public function scheduleCommand(Event $event)
+  public function scheduledCommand(Event $event)
   {
     $eventCommand = explode("'artisan' ", $event->command)[1];
 
     $event->sendOutputTo(base_path() . '/storage/logs/'.$eventCommand.'.txt');
-
     if (is_null($event->output)) {
+      //if no output, don't send anything
       return;
     }
 
@@ -29,8 +73,9 @@ class SlackOutput
       $message = file_get_contents($event->output);
 
       Artisan::call('slack:post', [
-        'to' => '#api-command',
+        'to' => $this->channel_scheduled_command,
         'attach' => [
+          'color' => 'grey',
           'title' => $eventCommand,
           'text'  => $message
         ]
@@ -40,48 +85,30 @@ class SlackOutput
 
 
   /**
-   * Output the failed job to slack
+   * Output a failed job to slack
    *
    * @param JobFailed $event
    */
   public function jobFailed(JobFailed $event)
   {
-    /*
-    $fields = array();
-    foreach($event->data["data"] as $key => $value) {
-      if (in_array($key, ["callback", "token", "command"])) {
-        break;
-      }
-      if (!empty($value)) {
-        if (is_array($value)) {
-          $value = json_encode($value, JSON_PRETTY_PRINT);
-        }
-        $fields[] = [
-          'title' => $key,
-          'value' => $value
-        ];
-      }
-    }*/
-
-    $message = "Job '".$event->job->getName()."' failed.\n";
-    $message .= json_encode($event->data['data']['command'], JSON_PRETTY_PRINT);
-
+    $message = "Job '".$event->job->getName()."' failed.";
     Artisan::call('slack:post', [
-      'to' => '#api-failed-jobs',
+      'to' => $this->channel_job_failed,
       'message' => $message
     ]);
   }
 
 
   /**
-   * Report exception to slack
+   * Report an exception to slack
    *
    * @param $e
    */
   public function exceptionReport(Exception $e) {
     Artisan::queue('slack:post', [
-      'to' => '#api-exception',
-      'attach' => $this->exceptionToSlackAttach($e)
+      'to' => $this->channel_exception,
+      'attach' => $this->exceptionToSlackAttach($e),
+      'message' => "Thrown exception"
     ]);
   }
 
@@ -105,18 +132,19 @@ class SlackOutput
       }
     };
 
-    $addToField("exception",  get_class($e),                      true);
-    $addToField("hash",       ExceptionHelper::hash($e),          true);
-    $addToField("http code",  ExceptionHelper::statusCode($e),    true);
-    $addToField("code",       $e->getCode(),                      true);
-    $addToField("file",       $e->getFile(),                      true);
-    $addToField("line",       $e->getLine(),                      true);
-    $addToField("trace",      $e->getTraceAsString(),             false);
+    $addToField("Exception",  get_class($e),                      true);
+    $addToField("Hash",       ExceptionHelper::hash($e),          true);
+    $addToField("Http code",  ExceptionHelper::statusCode($e),    true);
+    $addToField("Code",       $e->getCode(),                      true);
+    $addToField("File",       $e->getFile(),                      true);
+    $addToField("Line",       $e->getLine(),                      true);
 
     return [
-      "text"      => $e->getMessage(),
-      "fallback"  => get_class($e),
-      "fields"    => $fields
+      "color"     => "danger",
+      "title"     => $e->getMessage(),
+      "fallback"  => !empty($e->getMessage()) ? $e->getMessage() : get_class($e),
+      "fields"    => $fields,
+      "text"      => $e->getTraceAsString()
     ];
   }
 

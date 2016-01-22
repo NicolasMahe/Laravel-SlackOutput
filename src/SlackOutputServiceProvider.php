@@ -11,7 +11,7 @@ class SlackOutputServiceProvider extends ServiceProvider
    *
    * @var bool
    */
-  protected $defer = false;
+  protected $defer = true;
 
 
   /**
@@ -21,7 +21,13 @@ class SlackOutputServiceProvider extends ServiceProvider
    */
   public function boot()
   {
-    //...
+    //config
+    $this->publishes([__DIR__ . '/Config/SlackOutput.php' => config_path('slack-output.php')]);
+
+    //command
+    $this->commands(
+      Command\SlackPost::class
+    );
   }
 
 
@@ -32,8 +38,10 @@ class SlackOutputServiceProvider extends ServiceProvider
    */
   public function register()
   {
+    $this->mergeConfigFrom(__DIR__ . '/Config/SlackOutput.php', 'slack-output');
+
     $this->app->singleton(SlackOutput::class, function () {
-      return new SlackOutput();
+      return new SlackOutput(config('slack-output'));
     });
   }
 
