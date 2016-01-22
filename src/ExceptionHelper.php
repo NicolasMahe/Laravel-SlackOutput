@@ -43,7 +43,7 @@ class ExceptionHelper
    * @return null
    */
   static function hash(Exception $e) {
-    return $e instanceof JSONException
+    return $e instanceof \App\Exceptions\JSONException
       ? $e->getHash()
       : null;
   }

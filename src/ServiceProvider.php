@@ -2,9 +2,9 @@
 
 namespace NicolasMahe\SlackOutput;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\ServiceProvider as ServiceProviderParent;
 
-class SlackOutputServiceProvider extends ServiceProvider
+class ServiceProvider extends ServiceProviderParent
 {
   /**
    * Indicates if loading of the provider is deferred.
@@ -12,7 +12,6 @@ class SlackOutputServiceProvider extends ServiceProvider
    * @var bool
    */
   protected $defer = true;
-
 
   /**
    * Bootstrap any application services.
@@ -22,14 +21,13 @@ class SlackOutputServiceProvider extends ServiceProvider
   public function boot()
   {
     //config
-    $this->publishes([__DIR__ . '/Config/SlackOutput.php' => config_path('slack-output.php')]);
+    $this->publishes([__DIR__ . '/config.php' => config_path('slack-output.php')]);
 
     //command
     $this->commands(
       Command\SlackPost::class
     );
   }
-
 
   /**
    * Register the application services.
@@ -38,13 +36,12 @@ class SlackOutputServiceProvider extends ServiceProvider
    */
   public function register()
   {
-    $this->mergeConfigFrom(__DIR__ . '/Config/SlackOutput.php', 'slack-output');
+    $this->mergeConfigFrom(__DIR__ . '/config.php', 'slack-output');
 
-    $this->app->singleton(SlackOutput::class, function () {
-      return new SlackOutput(config('slack-output'));
+    $this->app->singleton(Service::class, function () {
+      return new Service(config('slack-output'));
     });
   }
-
 
   /**
    * Get the services provided by the provider.
@@ -54,7 +51,7 @@ class SlackOutputServiceProvider extends ServiceProvider
   public function provides()
   {
     return [
-      SlackOutput::class
+      Service::class
     ];
   }
 

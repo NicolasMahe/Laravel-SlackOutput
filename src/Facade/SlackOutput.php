@@ -3,8 +3,7 @@
 namespace NicolasMahe\SlackOutput\Facade;
 
 use Illuminate\Support\Facades\Facade;
-
-use NicolasMahe\SlackOutput\SlackOutput as SlackOutput2;
+use NicolasMahe\SlackOutput\Service;
 
 class SlackOutput extends Facade
 {
@@ -13,6 +12,6 @@ class SlackOutput extends Facade
    *
    * @return string
    */
-  protected static function getFacadeAccessor() { return SlackOutput2::class; }
+  protected static function getFacadeAccessor() { return Service::class; }
 
 }

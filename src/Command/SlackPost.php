@@ -16,7 +16,7 @@ class SlackPost extends Command {
 	protected $signature = 'slack:post
 	  {message? : The message to send}
 	  {to? : The channel or person}
-	  {attach? : The attachment}';
+	  {attach? : The attachment payload}';
 
 	/**
 	 * The console command description.

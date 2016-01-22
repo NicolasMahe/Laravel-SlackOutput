@@ -7,7 +7,7 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Queue\Events\JobFailed;
 use Exception;
 
-class SlackOutput
+class Service
 {
 
   /**
@@ -15,27 +15,21 @@ class SlackOutput
    *
    * @var string
    */
-
   protected $channel_job_failed;
-
 
   /**
    * The default channel to send scheduled command to
    *
    * @var string
    */
-
   protected $channel_scheduled_command;
-
 
   /**
    * The channel to send exception to
    *
    * @var string
    */
-
   protected $channel_exception;
-
 
   /**
    * SlackOutput constructor.
@@ -50,7 +44,6 @@ class SlackOutput
     $this->channel_scheduled_command  = $config["channel"]["scheduled_command"];
     $this->channel_exception          = $config["channel"]["exception"];
   }
-
 
   /**
    * Send to slack the results of a scheduled command.
@@ -83,7 +76,6 @@ class SlackOutput
     });
   }
 
-
   /**
    * Output a failed job to slack
    *
@@ -98,20 +90,18 @@ class SlackOutput
     ]);
   }
 
-
   /**
    * Report an exception to slack
    *
    * @param $e
    */
-  public function exceptionReport(Exception $e) {
+  public function exception(Exception $e) {
     Artisan::queue('slack:post', [
       'to' => $this->channel_exception,
       'attach' => $this->exceptionToSlackAttach($e),
       'message' => "Thrown exception"
     ]);
   }
-
 
   /**
    * Transform an exception to attachment array for slack post
