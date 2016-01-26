@@ -2,7 +2,7 @@
 
 Sends a message to [Slack](https://slack.com) when something goes wrong with your [Laravel](https://laravel.com) application.
 
-This package provides an exceptions handler, a failed jobs handler, and a scheduled commands reporting. They all use the `slack:post` command to post to Slack.
+This package provides an exceptions handler, a failed jobs handler, and a scheduled commands reporting. They all use a new `slack:post` command to post to Slack.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ composer require nicolasmahe/laravel-slack-output
 
 You need to include the service provider and the facade in your Laravel app.
 
-Add the service provider to the `providers` array in `config/app.php`
+Add the service provider to the `providers` array in `config/app.php`:
 
 ```php
 'providers' => [
@@ -28,7 +28,7 @@ Add the service provider to the `providers` array in `config/app.php`
 ],
 ```
 
-and then add the facade to your `aliases` array
+and then add the facade to your `aliases` array:
 
 ```php
 'aliases' => [
@@ -59,6 +59,8 @@ The command `slack:post` posts message to Slack. It can takes as arguments:
 * `to`: the channel or person to post to
 * `attach`: the attachment payload
 
+You can find information about the attach argument here: https://api.slack.com/docs/attachments
+
 You can call it by the running the command:
 ```sh
 php artisan slack:post "Hello, I'm a bot" @nico
@@ -76,9 +78,13 @@ Note the `Artisan::queue`, the command will be executed in background and will n
 
 ### Exceptions handler
 
-To report useful exception to Slack, open `app/Exceptions/Handler.php`, add `use NicolasMahe\SlackOutput\Facade\SlackOutput;` to the top of the file and transform the `report` function like:
+To report useful exception to Slack, open `app/Exceptions/Handler.php`, and transform it like:
 
 ```php
+use NicolasMahe\SlackOutput\Facade\SlackOutput;
+
+...
+
 public function report(Exception $e)
 {
   if ($this->shouldReport($e)) {
@@ -94,9 +100,13 @@ This will only reports exceptions that are not in the `$dontReport` array in the
 
 ### Failed jobs handler
 
-To report failed jobs to Slack, open `app/Providers/AppServiceProvider.php`, add `use NicolasMahe\SlackOutput\Facade\SlackOutput;` to the top of the file and transform the `boot` function like:
+To report failed jobs to Slack, open `app/Providers/AppServiceProvider.php`, and transform it like:
 
 ```php
+use NicolasMahe\SlackOutput\Facade\SlackOutput;
+
+...
+
 public function boot()
 {
   Queue::failing(function (JobFailed $job) {
@@ -108,12 +118,19 @@ public function boot()
 
 ### Scheduled commands reporting
 
-To report the output of scheduled commands to Slack, open `app/Console/Kernel.php`, add `use NicolasMahe\SlackOutput\Facade\SlackOutput;` to the top of the file and add around the scheduled commands: `SlackOutput::scheduledCommand`
+To report the output of scheduled commands to Slack, open `app/Console/Kernel.php`, and transform it like:
 
 ```php
-SlackOutput::scheduledCommand(
-  $schedule->command('db:backup-auto')->daily()
-);
+use NicolasMahe\SlackOutput\Facade\SlackOutput;
+
+...
+
+protected function schedule(Schedule $schedule)
+{
+  SlackOutput::scheduledCommand(
+    $schedule->command('db:backup-auto')->daily()
+  );
+}
 ```
 
 
