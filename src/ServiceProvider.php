@@ -21,7 +21,9 @@ class ServiceProvider extends ServiceProviderParent
   public function boot()
   {
     //config
-    $this->publishes([__DIR__ . '/config.php' => config_path('slack-output.php')]);
+    if (class_exists('Illuminate\Foundation\Application', false)) {
+      $this->publishes([__DIR__ . '/config.php' => config_path('slack-output.php')]);
+    }
 
     //command
     $this->commands(

@@ -60,7 +60,8 @@ class Service
    */
   public function scheduledCommand(Event $event)
   {
-    $eventCommand = explode("'artisan' ", $event->command)[1];
+    preg_match("/(artisan |'artisan' )(.*)/us", $event->command, $matches);
+    $eventCommand = $matches[2];
 
     $event->sendOutputTo(base_path() . '/storage/logs/'.$eventCommand.'.txt');
     if (is_null($event->output)) {
