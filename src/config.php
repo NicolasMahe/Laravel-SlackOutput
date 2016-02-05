@@ -96,7 +96,7 @@ return [
 		| Example:
 		| 'classes' => [
 		|	  \App\Models\User::class => [
-		|		  'is_real' => true //optional constraint
+		|		  'is_active' => true //optional constraint
 		|	  ]
 		| ],
 		|
