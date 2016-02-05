@@ -111,26 +111,31 @@ You need to configure this command by setting in `config/slack-output.php` the E
 
 You can add constraints to the classes to limit the number of counted data.
 
-	'classes' => [
-		  \App\Models\User::class => [
-			  'is_active' => true //optional constraint
-		  ]
-	],
+```php
+'classes' => [
+	  \App\Models\User::class => [
+		  'is_active' => true //optional constraint
+	  ]
+],
+```
 	
 The dates array is the form `'name of the date' => Carbon::instance()`. Like:
-	
-	'dates' => [
-		'yesterday' => \Carbon\Carbon::yesterday(),
-		'last week' => \Carbon\Carbon::today()->subWeek(1)
-	]
+
+```php
+'dates' => [
+	'yesterday' => \Carbon\Carbon::yesterday(),
+	'last week' => \Carbon\Carbon::today()->subWeek(1)
+]
+```
 
 To schedule this command every day, simple add to `app/Console/Kernel.php`:
 
-	protected function schedule(Schedule $schedule)
-	{
-	  $schedule->command('slack:stats')->daily()
-	}
-
+```php
+protected function schedule(Schedule $schedule)
+{
+  $schedule->command('slack:stats')->daily()
+}
+```
 
 ## Exceptions handler
 
