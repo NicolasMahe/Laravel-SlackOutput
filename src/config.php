@@ -36,11 +36,13 @@ return [
       "job_failed"        => "",
       "scheduled_command" => "",
       "exception"         => "",
+	    "stats"             => "",
     ],
     "local" => [
       "job_failed"        => "",
       "scheduled_command" => "",
       "exception"         => "",
+	    "stats"             => "",
     ],
   ],
 
@@ -69,6 +71,68 @@ return [
   */
 
   'icon' => "",
+
+
+	/*
+	|-------------------------------------------------------------
+	| Stats command
+	|-------------------------------------------------------------
+	|
+	| Configuration for the stats command
+	|
+	*/
+
+	'stats' => [
+
+		/*
+		|-------------------------------------------------------------
+		| Stats command - Classes
+		|-------------------------------------------------------------
+		|
+		| Indicate the Eloquent classes you want the stats from.
+		| (Optional) You can also pass an array of constraints to limit
+		| the numbers of counted data.
+		|
+		| Example:
+		| 'classes' => [
+		|	  \App\Models\User::class => [
+		|		  'is_real' => true //optional constraint
+		|	  ]
+		| ],
+		|
+		*/
+
+		'classes' => [
+			\App\Models\User::class
+		],
+
+
+		/*
+		|-------------------------------------------------------------
+		| Stats command - Dates
+		|-------------------------------------------------------------
+		|
+		| Set the dates the stats will be counted from.
+		|
+		| The form is like :
+		| 'dates' => [
+ 		|   "date name" => Carbon_object
+		| ]
+		|
+		| Example (default):
+		| 'dates' => [
+		| 	'yesterday' => \Carbon\Carbon::yesterday(),
+		| 	'last week' => \Carbon\Carbon::today()->subWeek(1)
+		| ],
+		|
+		*/
+
+		'dates' => [
+			'yesterday' => \Carbon\Carbon::yesterday(),
+			'last week' => \Carbon\Carbon::today()->subWeek(1)
+		],
+
+	],
 
 
 ];

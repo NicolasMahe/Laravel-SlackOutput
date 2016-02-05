@@ -8,6 +8,7 @@ use Illuminate\Queue\Events\JobFailed;
 use Exception;
 
 use NicolasMahe\SlackOutput\Library\ScheduledCommand;
+use NicolasMahe\SlackOutput\Library\Stats;
 use NicolasMahe\SlackOutput\Library\JobFailed as JF;
 use NicolasMahe\SlackOutput\Library\Exception as E;
 
@@ -28,18 +29,24 @@ class Service
    */
   protected $channel_scheduled_command;
 
-  /**
-   * The channel to send exception to
-   *
-   * @var string
-   */
-  protected $channel_exception;
+	/**
+	 * The channel to send exception to
+	 *
+	 * @var string
+	 */
+	protected $channel_exception;
+
+	/**
+	 * The channel to send stats
+	 *
+	 * @var string
+	 */
+	protected $channel_stats;
 
   /**
    * SlackOutput constructor.
    *
    * @param array $config
-   * @throws Exception
    */
   function __construct(array $config)
   {
@@ -52,12 +59,18 @@ class Service
     //config
     $this->channel_job_failed         = $channel["job_failed"];
     $this->channel_scheduled_command  = $channel["scheduled_command"];
-    $this->channel_exception          = $channel["exception"];
+	  $this->channel_exception          = $channel["exception"];
+	  $this->channel_stats              = $channel["stats"];
   }
 
-
-  }
-
+	/**
+	 * Create an stats object
+	 *
+	 * @return Stats
+	 */
+	public function stats() {
+		Stats::output($this->channel_stats);
+	}
 
 	/**
 	 * Send to slack the results of a scheduled command.
