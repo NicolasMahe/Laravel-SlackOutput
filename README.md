@@ -1,15 +1,39 @@
 # Laravel SlackOutput
 
-Sends a message to [Slack](https://slack.com) when something goes wrong with your [Laravel](https://laravel.com) application.
+Sends a message to [Slack](https://slack.com) with your [Laravel](https://laravel.com) application.
 
-This package provides an exceptions handler, a failed jobs handler, and a scheduled commands reporting. They all use a new `slack:post` command to post to Slack.
+This package provides:
 
-## Requirements
+* ## Post Command
+	Send message to slack with a Laravel command.
+	
+* ## Stats Command
+	Send stats about your Laravel app with this customizable command.
+	
+	![Stats on Slack](https://raw.githubusercontent.com/NicolasMahe/Laravel-SlackOutput/master/screenshots/stats.png)
+	
+* ## Exceptions handler
+	Output to Slack useful information about exceptions when they occurred.
+	
+	![Exception on Slack](https://raw.githubusercontent.com/NicolasMahe/Laravel-SlackOutput/master/screenshots/exception.png)
+	
+* ## Failed jobs handler
+	Get alerted when a job failed.
+	
+	![Job failed on Slack](https://raw.githubusercontent.com/NicolasMahe/Laravel-SlackOutput/master/screenshots/jobOutput.png)
+	
+* ## Scheduled commands reporting
+	Keep an eye on the result of your scheduled commands.
+	
+	![Scheduled command on Slack](https://raw.githubusercontent.com/NicolasMahe/Laravel-SlackOutput/master/screenshots/scheduledCommand.png)
+	
+
+# Requirements
 
 * Laravel 5.1 or greater
 * PHP 5.5.9 or greater
 
-## Installation
+# Installation
 
 You can install the package using the [Composer](https://getcomposer.org/) package manager. You can install it by running this command in your project root:
 
@@ -50,11 +74,12 @@ Copy the webhook url and open `config/slack-output.php` and set the webhook url 
 
 If `null` is set for any, the package will fall back on the default settings set by the webhook.
 
-## Usage
+# Usage
 
-### Command
+## Post Command
 
-The command `slack:post` posts message to Slack. It can takes as arguments:
+The command `slack:post` posts message to Slack. It can take as arguments:
+
 * `message`: the message to send
 * `to`: the channel or person to post to
 * `attach`: the attachment payload
@@ -62,11 +87,13 @@ The command `slack:post` posts message to Slack. It can takes as arguments:
 You can find information about the attach argument here: https://api.slack.com/docs/attachments
 
 You can call it by the running the command:
+
 ```sh
 php artisan slack:post "Hello, I'm a bot" @nico
 ```
 
 You can also call it in your Laravel app:
+
 ```php
 Artisan::queue('slack:post', [
   'to' => "#api-output",
@@ -74,9 +101,38 @@ Artisan::queue('slack:post', [
   'message' => "Hello, I'm a bot"
 ]);
 ```
-Note the `Artisan::queue`, the command will be executed in background and will not block the current request. 
+Note the `Artisan::queue`, the command will be executed in background and will not block the current request.
 
-### Exceptions handler
+## Stats command
+
+The command `slack:stats` send useful stats about your app to slack.
+
+You need to configure this command by setting in `config/slack-output.php` the Eloquent classes and dates you prefer.
+
+You can add constraints to the classes to limit the number of counted data.
+
+	'classes' => [
+		  \App\Models\User::class => [
+			  'is_active' => true //optional constraint
+		  ]
+	],
+	
+The dates array is the form `'name of the date' => Carbon::instance()`. Like:
+	
+	'dates' => [
+		'yesterday' => \Carbon\Carbon::yesterday(),
+		'last week' => \Carbon\Carbon::today()->subWeek(1)
+	]
+
+To schedule this command every day, simple add to `app/Console/Kernel.php`:
+
+	protected function schedule(Schedule $schedule)
+	{
+	  $schedule->command('slack:stats')->daily()
+	}
+
+
+## Exceptions handler
 
 To report useful exception to Slack, open `app/Exceptions/Handler.php`, and transform it like:
 
@@ -98,7 +154,7 @@ public function report(Exception $e)
 This will only reports exceptions that are not in the `$dontReport` array in the same file. 
 
 
-### Failed jobs handler
+## Failed jobs handler
 
 To report failed jobs to Slack, open `app/Providers/AppServiceProvider.php`, and transform it like:
 
@@ -116,7 +172,7 @@ public function boot()
 ```
 
 
-### Scheduled commands reporting
+## Scheduled commands reporting
 
 To report the output of scheduled commands to Slack, open `app/Console/Kernel.php`, and transform it like:
 
@@ -134,10 +190,10 @@ protected function schedule(Schedule $schedule)
 ```
 
 
-## Contributing
+# Contributing
 
 If you have problems, found a bug or have a feature suggestion, please add an issue on GitHub. Pull requests are also welcomed!
 
-## License
+# License
 
 This package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
