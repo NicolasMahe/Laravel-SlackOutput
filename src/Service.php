@@ -2,10 +2,14 @@
 
 namespace NicolasMahe\SlackOutput;
 
-use Illuminate\Support\Facades\Artisan;
+
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Queue\Events\JobFailed;
 use Exception;
+
+use NicolasMahe\SlackOutput\Library\ScheduledCommand;
+use NicolasMahe\SlackOutput\Library\JobFailed as JF;
+use NicolasMahe\SlackOutput\Library\Exception as E;
 
 class Service
 {
@@ -51,98 +55,36 @@ class Service
     $this->channel_exception          = $channel["exception"];
   }
 
-  /**
-   * Send to slack the results of a scheduled command.
-   *
-   * @todo: add success tag to adjust the color
-   * @param  Event $event
-   * @return $this|void
-   */
-  public function scheduledCommand(Event $event)
-  {
-    preg_match("/(artisan |'artisan' )(.*)/us", $event->command, $matches);
-    $eventCommand = $matches[2];
 
-    $event->sendOutputTo(base_path() . '/storage/logs/'.$eventCommand.'.txt');
-    if (is_null($event->output)) {
-      //if no output, don't send anything
-      return;
-    }
-
-    return $event->then(function () use ($event, $eventCommand) {
-      $message = file_get_contents($event->output);
-
-      Artisan::call('slack:post', [
-        'to' => $this->channel_scheduled_command,
-        'attach' => [
-          'color' => 'grey',
-          'title' => $eventCommand,
-          'text'  => $message
-        ]
-      ]);
-    });
   }
 
-  /**
-   * Output a failed job to slack
-   *
-   * @param JobFailed $event
-   */
-  public function jobFailed(JobFailed $event)
-  {
-    $message = "Job '".$event->job->getName()."' failed.";
-    Artisan::call('slack:post', [
-      'to' => $this->channel_job_failed,
-      'message' => $message
-    ]);
-  }
 
-  /**
-   * Report an exception to slack
-   *
-   * @param $e
-   */
-  public function exception(Exception $e) {
-    Artisan::queue('slack:post', [
-      'to' => $this->channel_exception,
-      'attach' => $this->exceptionToSlackAttach($e),
-      'message' => "Thrown exception"
-    ]);
-  }
+	/**
+	 * Send to slack the results of a scheduled command.
+	 *
+	 * @param Event $event
+	 */
+	public function scheduledCommand(Event $event) {
+		ScheduledCommand::output($event, $this->channel_scheduled_command);
+	}
 
-  /**
-   * Transform an exception to attachment array for slack post
-   *
-   * @param Exception $e
-   * @return array
-   */
-  public function exceptionToSlackAttach(Exception $e) {
-    $fields = [];
+	/**
+	 * Output a failed job to slack
+	 *
+	 * @param JobFailed $event
+	 */
+	public function jobFailed(JobFailed $event) {
+		JF::output($event, $this->channel_job_failed);
+	}
 
-    $addToField = function($name, $value, $short = false) use (&$fields) {
-      if (!empty($value)) {
-        $fields[] = [
-          "title" => $name,
-          "value" => $value,
-          "short" => $short
-        ];
-      }
-    };
+	/**
+	 * Report an exception to slack
+	 *
+	 * @param Exception $e
+	 */
+	public function exception(Exception $e) {
+		E::output($e, $this->channel_job_failed);
+	}
 
-    $addToField("Exception",  get_class($e),                      true);
-    $addToField("Hash",       ExceptionHelper::hash($e),          true);
-    $addToField("Http code",  ExceptionHelper::statusCode($e),    true);
-    $addToField("Code",       $e->getCode(),                      true);
-    $addToField("File",       $e->getFile(),                      true);
-    $addToField("Line",       $e->getLine(),                      true);
-
-    return [
-      "color"     => "danger",
-      "title"     => $e->getMessage(),
-      "fallback"  => !empty($e->getMessage()) ? $e->getMessage() : get_class($e),
-      "fields"    => $fields,
-      "text"      => $e->getTraceAsString()
-    ];
-  }
 
 }
