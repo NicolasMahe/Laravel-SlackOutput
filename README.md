@@ -1,6 +1,6 @@
 # Laravel SlackOutput
 
-Sends a message to [Slack](https://slack.com) with your [Laravel](https://laravel.com) application.
+Sends messages to [Slack](https://slack.com) with your [Laravel](https://laravel.com) application.
 
 This package provides:
 
