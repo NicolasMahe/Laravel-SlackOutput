@@ -96,7 +96,7 @@ class Service
 	 * @param Exception $e
 	 */
 	public function exception(Exception $e) {
-		E::output($e, $this->channel_job_failed);
+		E::output($e, $this->channel_exception);
 	}
 
 
