@@ -4,6 +4,7 @@ namespace NicolasMahe\SlackOutput\Library;
 
 use Illuminate\Support\Facades\Artisan;
 use Exception as E;
+use Illuminate\Support\Facades\Request;
 use NicolasMahe\SlackOutput\Helper\ExceptionHelper;
 
 class Exception
@@ -46,7 +47,9 @@ class Exception
 		$addToField("Http code",  ExceptionHelper::statusCode($e),    true);
 		$addToField("Code",       $e->getCode(),                      true);
 		$addToField("File",       $e->getFile(),                      true);
-		$addToField("Line",       $e->getLine(),                      true);
+    $addToField("Line",       $e->getLine(),                      true);
+    $addToField("Request url",    Request::url(),                 true);
+    $addToField("Request param",  json_encode(Request::all()),    true);
 
 		return [
 			"color"     => "danger",
