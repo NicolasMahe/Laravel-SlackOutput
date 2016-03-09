@@ -49,6 +49,7 @@ class Exception
 		$addToField("File",       $e->getFile(),                      true);
     $addToField("Line",       $e->getLine(),                      true);
     $addToField("Request url",    Request::url(),                 true);
+    $addToField("Request method", Request::method(),              true);
     $addToField("Request param",  json_encode(Request::all()),    true);
 
 		return [
