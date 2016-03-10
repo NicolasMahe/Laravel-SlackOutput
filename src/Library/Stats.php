@@ -8,144 +8,156 @@ use Illuminate\Support\Facades\Artisan;
 class Stats
 {
 
-	/**
-	 * Output the stats to slack
-	 *
-	 * @param $channel
-	 */
-	static function output($channel) {
-		$object = new self();
-		$object->calculateStats();
-		$object->sendToSlack($channel);
-	}
+    /**
+     * Output the stats to slack
+     *
+     * @param $channel
+     */
+    static function output($channel)
+    {
+        $object = new self();
+        $object->calculateStats();
+        $object->sendToSlack($channel);
+    }
 
-	/**
-	 * The stats array
-	 *
-	 * @var array
-	 */
-	public $stats = [];
 
-	/**
-	 * Get the classes and sanitized them
-	 *
-	 * @return array
-	 */
-	protected function getClasses() {
+    /**
+     * The stats array
+     *
+     * @var array
+     */
+    public $stats = [ ];
 
-		$classes = config('slack-output.stats.classes');
 
-		//force classes to have the right format
-		$sanitized_classes = [];
-		foreach ($classes as $classes_name => $constraints) {
-			//check constraints are supplied, if not, correct
-			//the classes name with the right value
-			if (is_int($classes_name)) {
-				$classes_name = $constraints;
-				$constraints = [];
-			}
-			$sanitized_classes[$classes_name] = $constraints;
-		}
+    /**
+     * Get the classes and sanitized them
+     *
+     * @return array
+     */
+    protected function getClasses()
+    {
 
-		return $sanitized_classes;
-	}
+        $classes = config('slack-output.stats.classes');
 
-	/**
-	 * Get the dates
-	 *
-	 * @return array
-	 */
-	protected function getDates() {
-		return config('slack-output.stats.dates');
-	}
+        //force classes to have the right format
+        $sanitized_classes = [ ];
+        foreach ($classes as $classes_name => $constraints) {
+            //check constraints are supplied, if not, correct
+            //the classes name with the right value
+            if (is_int($classes_name)) {
+                $classes_name = $constraints;
+                $constraints  = [ ];
+            }
+            $sanitized_classes[$classes_name] = $constraints;
+        }
 
-	/**
-	 * Do the stats!
-	 */
-	public function calculateStats() {
-		$classes = $this->getClasses();
-		$dates = $this->getDates();
+        return $sanitized_classes;
+    }
 
-		//explore all class to stated
-		foreach ($classes as $objectClass => $constraints) {
-			//prepare useful data
-			$stats_fields = [];
 
-			$objectName = last(explode('\\', $objectClass));
+    /**
+     * Get the dates
+     *
+     * @return array
+     */
+    protected function getDates()
+    {
+        return config('slack-output.stats.dates');
+    }
 
-			//explore each date to count from
-			foreach ($dates as $dateName => $date) {
-				//create the sql request
-				$sql = $objectClass::where('created_at', '>=', $date->toDateTimeString());
 
-				//taking into account the constraint
-				foreach ($constraints as $constraintName => $constraintValue) {
-					$sql = $sql->where($constraintName, $constraintValue);
-				}
+    /**
+     * Do the stats!
+     */
+    public function calculateStats()
+    {
+        $classes = $this->getClasses();
+        $dates   = $this->getDates();
 
-				//count !
-				$count = $sql->count();
+        //explore all class to stated
+        foreach ($classes as $objectClass => $constraints) {
+            //prepare useful data
+            $stats_fields = [ ];
 
-				//set count
-				$stats_fields[] = [
-					"since" => $dateName,
-					"value" => $count
-				];
-			}
+            $objectName = last(explode('\\', $objectClass));
 
-			//add to stats array
-			$this->stats[] = [
-				'name' => $objectName,
-				'values' => $stats_fields
-			];
-		}
-	}
+            //explore each date to count from
+            foreach ($dates as $dateName => $date) {
+                //create the sql request
+                $sql = $objectClass::where('created_at', '>=', $date->toDateTimeString());
 
-	/**
-	 * Transform the stats array to a slack attachment
-	 */
-	protected function prepareSlackAttachment() {
-		$attachments = [];
+                //taking into account the constraint
+                foreach ($constraints as $constraintName => $constraintValue) {
+                    $sql = $sql->where($constraintName, $constraintValue);
+                }
 
-		foreach($this->stats as $stats) {
-			$name = $stats['name'];
+                //count !
+                $count = $sql->count();
 
-			$fields = [];
+                //set count
+                $stats_fields[] = [
+                    "since" => $dateName,
+                    "value" => $count
+                ];
+            }
 
-			foreach($stats['values'] as $stat) {
-				$count = $stat['value'];
-				$since = $stat['since'];
+            //add to stats array
+            $this->stats[] = [
+                'name'   => $objectName,
+                'values' => $stats_fields
+            ];
+        }
+    }
 
-				$fields[] = [
-					"title" => "Since " . $since,
-					"value" => $count,
-					"short" => true
-				];
-			}
 
-			$attachments[] = [
-				'color' => 'grey',
-				"title" => "New " . $name . "s",
-				"fields" => $fields
-			];
-		}
+    /**
+     * Transform the stats array to a slack attachment
+     */
+    protected function prepareSlackAttachment()
+    {
+        $attachments = [ ];
 
-		return $attachments;
-	}
+        foreach ($this->stats as $stats) {
+            $name = $stats['name'];
 
-	/**
-	 * Send the stats to output
-	 *
-	 * @param $channel
-	 */
-	public function sendToSlack($channel) {
-		$attachments = $this->prepareSlackAttachment();
+            $fields = [ ];
 
-		Artisan::call('slack:post', [
-			'to' => $channel,
-			'attach' => $attachments,
-			'message' => "Stats of the " . Carbon::now()->toFormattedDateString()
-		]);
-	}
+            foreach ($stats['values'] as $stat) {
+                $count = $stat['value'];
+                $since = $stat['since'];
+
+                $fields[] = [
+                    "title" => "Since " . $since,
+                    "value" => $count,
+                    "short" => true
+                ];
+            }
+
+            $attachments[] = [
+                'color'  => 'grey',
+                "title"  => "New " . $name . "s",
+                "fields" => $fields
+            ];
+        }
+
+        return $attachments;
+    }
+
+
+    /**
+     * Send the stats to output
+     *
+     * @param $channel
+     */
+    public function sendToSlack($channel)
+    {
+        $attachments = $this->prepareSlackAttachment();
+
+        Artisan::call('slack:post', [
+            'to'      => $channel,
+            'attach'  => $attachments,
+            'message' => "Stats of the " . Carbon::now()->toFormattedDateString()
+        ]);
+    }
 
 }
