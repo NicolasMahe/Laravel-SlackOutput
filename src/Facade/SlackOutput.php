@@ -7,11 +7,14 @@ use NicolasMahe\SlackOutput\Service;
 
 class SlackOutput extends Facade
 {
-  /**
-   * Get the registered name of the component.
-   *
-   * @return string
-   */
-  protected static function getFacadeAccessor() { return Service::class; }
+    /**
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    protected static function getFacadeAccessor()
+    {
+        return Service::class;
+    }
 
 }
