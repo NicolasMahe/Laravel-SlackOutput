@@ -2,10 +2,14 @@
 
 namespace NicolasMahe\SlackOutput;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Queue\Events\JobFailed;
 use Exception;
+
+use NicolasMahe\SlackOutput\Library\ScheduledCommand;
+use NicolasMahe\SlackOutput\Library\Stats;
+use NicolasMahe\SlackOutput\Library\JobFailed as JF;
+use NicolasMahe\SlackOutput\Library\Exception as E;
 
 class Service
 {
@@ -32,55 +36,55 @@ class Service
     protected $channel_exception;
 
     /**
+     * The channel to send stats
+     *
+     * @var string
+     */
+    protected $channel_stats;
+
+
+    /**
      * SlackOutput constructor.
      *
      * @param array $config
-     * @throws Exception
      */
     function __construct(array $config)
     {
-        $env = app()->environment();
+        $env     = app()->environment();
         $channel = $config["channel"]['local'];
-        if (isset($config["channel"][$env])) {
+        if (isset( $config["channel"][$env] )) {
             $channel = $config["channel"][$env];
         }
 
         //config
-        $this->channel_job_failed = $channel["job_failed"];
+        $this->channel_job_failed        = $channel["job_failed"];
         $this->channel_scheduled_command = $channel["scheduled_command"];
-        $this->channel_exception = $channel["exception"];
+        $this->channel_exception         = $channel["exception"];
+        $this->channel_stats             = $channel["stats"];
     }
+
+
+    /**
+     * Create an stats object
+     *
+     * @return Stats
+     */
+    public function stats()
+    {
+        Stats::output($this->channel_stats);
+    }
+
 
     /**
      * Send to slack the results of a scheduled command.
      *
-     * @todo: add success tag to adjust the color
-     * @param  Event $event
-     * @return $this|void
+     * @param Event $event
      */
     public function scheduledCommand(Event $event)
     {
-        $eventCommand = explode("'artisan' ", $event->command)[1];
-
-        $event->sendOutputTo(base_path() . '/storage/logs/' . $eventCommand . '.txt');
-        if (is_null($event->output)) {
-            //if no output, don't send anything
-            return;
-        }
-
-        return $event->then(function () use ($event, $eventCommand) {
-            $message = file_get_contents($event->output);
-
-            Artisan::call('slack:post', [
-                'to' => $this->channel_scheduled_command,
-                'attach' => [
-                    'color' => 'grey',
-                    'title' => $eventCommand,
-                    'text' => $message
-                ]
-            ]);
-        });
+        ScheduledCommand::output($event, $this->channel_scheduled_command);
     }
+
 
     /**
      * Output a failed job to slack
@@ -89,61 +93,18 @@ class Service
      */
     public function jobFailed(JobFailed $event)
     {
-        $message = "Job '" . $event->job->getName() . "' failed.";
-        Artisan::call('slack:post', [
-            'to' => $this->channel_job_failed,
-            'message' => $message
-        ]);
+        JF::output($event, $this->channel_job_failed);
     }
+
 
     /**
      * Report an exception to slack
      *
-     * @param $e
+     * @param Exception $e
      */
     public function exception(Exception $e)
     {
-        Artisan::queue('slack:post', [
-            'to' => $this->channel_exception,
-            'attach' => $this->exceptionToSlackAttach($e),
-            'message' => "Thrown exception"
-        ]);
-    }
-
-    /**
-     * Transform an exception to attachment array for slack post
-     *
-     * @param Exception $e
-     * @return array
-     */
-    public function exceptionToSlackAttach(Exception $e)
-    {
-        $fields = [];
-
-        $addToField = function ($name, $value, $short = false) use (&$fields) {
-            if (!empty($value)) {
-                $fields[] = [
-                    "title" => $name,
-                    "value" => $value,
-                    "short" => $short
-                ];
-            }
-        };
-
-        $addToField("Exception", get_class($e), true);
-        $addToField("Hash", ExceptionHelper::hash($e), true);
-        $addToField("Http code", ExceptionHelper::statusCode($e), true);
-        $addToField("Code", $e->getCode(), true);
-        $addToField("File", $e->getFile(), true);
-        $addToField("Line", $e->getLine(), true);
-
-        return [
-            "color" => "danger",
-            "title" => $e->getMessage(),
-            "fallback" => !empty($e->getMessage()) ? $e->getMessage() : get_class($e),
-            "fields" => $fields,
-            "text" => $e->getTraceAsString()
-        ];
+        E::output($e, $this->channel_exception);
     }
 
 }

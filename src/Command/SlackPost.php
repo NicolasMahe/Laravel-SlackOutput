@@ -15,9 +15,9 @@ class SlackPost extends Command
      * @var string
      */
     protected $signature = 'slack:post
-        {message? : The message to send}
-        {to? : The channel or person}
-        {attach? : The attachment payload}';
+	  {message? : The message to send}
+	  {to? : The channel or person}
+	  {attach? : The attachment payload}';
 
     /**
      * The console command description.
@@ -25,6 +25,14 @@ class SlackPost extends Command
      * @var string
      */
     protected $description = 'Send a message to Slack';
+
+    /**
+     * The slack client
+     *
+     * @var Client
+     */
+    protected $client;
+
 
     /**
      * Execute the console command.
@@ -38,25 +46,24 @@ class SlackPost extends Command
 
         //get command arguments
         $message = $this->argument('message');
-        $to = $this->argument('to');
-        $attach = $this->argument('attach');
+        $to      = $this->argument('to');
+        $attach  = $this->argument('attach');
 
         //init client
-        $client = $this->initClient();
+        $this->initClient();
 
         //attach data
-        if (is_array($attach)) {
-            $client = $client->attach($attach);
-        }
-        if (!empty($to)) {
-            $client = $client->to($to);
-        }
+        $this->addAttachment($attach);
+
+        //add to
+        $this->addTo($to);
 
         //send
-        $client->send($message);
+        $this->send($message);
 
         $this->info('Message sent');
     }
+
 
     /**
      * Init the slack client
@@ -69,17 +76,76 @@ class SlackPost extends Command
         //get slack config
         $slack_config = config('slack-output');
 
-        if (empty($slack_config["endpoint"])) {
+        if (empty( $slack_config["endpoint"] )) {
             throw new Exception("The endpoint url is not set in the config");
         }
 
         //init client
-        $client = new Client($slack_config["endpoint"], [
+        $this->client = new Client($slack_config["endpoint"], [
             "username" => $slack_config["username"],
-            "icon" => $slack_config["icon"]
+            "icon"     => $slack_config["icon"]
         ]);
-
-        return $client;
     }
 
+
+    /**
+     * Add the attachments
+     *
+     * @param $attach
+     */
+    protected function addAttachment($attach)
+    {
+        if (is_array($attach)) {
+            if ($this->is_assoc($attach)) {
+                $attach = [ $attach ];
+            }
+
+            foreach ($attach as $attachElement) {
+                $this->client = $this->client->attach($attachElement);
+            }
+        }
+    }
+
+
+    /**
+     * Add the receiver
+     *
+     * @param $to
+     */
+    protected function addTo($to)
+    {
+        if ( ! empty( $to )) {
+            $this->client = $this->client->to($to);
+        }
+    }
+
+
+    /**
+     * Send the message
+     *
+     * @param $message
+     */
+    protected function send($message)
+    {
+        $this->client->send($message);
+        $this->client = null;
+    }
+
+
+    /**
+     * Check if array is associative
+     *
+     * @param array $array
+     *
+     * @return bool
+     */
+    public static function is_assoc(array $array)
+    {
+        // Keys of the array
+        $keys = array_keys($array);
+
+        // If the array keys of the keys match the keys, then the array must
+        // not be associative (e.g. the keys array looked like {0:0, 1:1...}).
+        return array_keys($keys) !== $keys;
+    }
 }

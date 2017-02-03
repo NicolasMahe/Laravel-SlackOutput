@@ -6,12 +6,14 @@ use Illuminate\Support\ServiceProvider as ServiceProviderParent;
 
 class ServiceProvider extends ServiceProviderParent
 {
+
     /**
      * Indicates if loading of the provider is deferred.
      *
      * @var bool
      */
     protected $defer = true;
+
 
     /**
      * Bootstrap any application services.
@@ -21,13 +23,14 @@ class ServiceProvider extends ServiceProviderParent
     public function boot()
     {
         //config
-        $this->publishes([__DIR__ . '/config.php' => config_path('slack-output.php')]);
+        if (class_exists('Illuminate\Foundation\Application', false)) {
+            $this->publishes([ __DIR__ . '/config.php' => config_path('slack-output.php') ]);
+        }
 
         //command
-        $this->commands(
-            Command\SlackPost::class
-        );
+        $this->commands(Command\SlackPost::class, Command\SlackStats::class);
     }
+
 
     /**
      * Register the application services.
@@ -42,6 +45,7 @@ class ServiceProvider extends ServiceProviderParent
             return new Service(config('slack-output'));
         });
     }
+
 
     /**
      * Get the services provided by the provider.
